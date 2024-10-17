@@ -64,7 +64,7 @@ export async function addReviewToRestaurant(db, restaurantId, review) {
 	try {
 		const docRef = doc(collection(db, "restaurants"), restaurantId);
 		const newRatingDocument = doc(
-			collection(db, `restaurants/${restaurantId}/ratings`)
+			collection(db, "restaurants", restaurantId, "ratings")
 		);
 
 		// corrected line
