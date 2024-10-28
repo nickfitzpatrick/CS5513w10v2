@@ -4,6 +4,7 @@ import { storage } from "@/src/lib/firebase/clientApp";
 
 import { updateRestaurantImageReference } from "@/src/lib/firebase/firestore";
 
+// working
 export async function updateRestaurantImage(restaurantId, image) {
 	try {
 		if (!restaurantId)
