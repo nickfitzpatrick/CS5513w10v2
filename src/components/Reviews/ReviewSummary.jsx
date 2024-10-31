@@ -2,6 +2,8 @@ const { GoogleGenerativeAI } = require("@google/generative-ai");
 import { getReviewsByRestaurantId } from "@/src/lib/firebase/firestore.js";
 import { getAuthenticatedAppForUser } from "@/src/lib/firebase/serverApp";
 import { getFirestore } from "firebase/firestore";
+// added for modified call 
+import { HarmBlockThreshold, HarmCategory } from "@google/generative-ai";
 
 export async function GeminiSummary({ restaurantId }) {
   const { firebaseServerApp } = await getAuthenticatedAppForUser();
@@ -11,9 +13,26 @@ export async function GeminiSummary({ restaurantId }) {
   );
 
   const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-  const model = genAI.getGenerativeModel({ model: "gemini-pro"});
+  const genAIsafety = [
+    {
+      category: HarmCategory.HARM_CATEGORY_HARASSMENT,
+      threshold: HarmBlockThreshold.BLOCK_NONE,
+    },
+    {
+      category: HarmCategory.HARM_CATEGORY_HATE_SPEECH,
+      threshold: HarmBlockThreshold.BLOCK_NONE,
+    },
+  ];
+  
+  const model = genAI.getGenerativeModel(
+    { 
+      model: "gemini-1.5-flash",
+      safetySettings: genAIsafety
+    }
+  );
 
   const reviewSeparator = "@";
+  
   const prompt = `
     Based on the following restaurant reviews, 
     where each review is separated by a '${reviewSeparator}' character, 
@@ -21,6 +40,8 @@ export async function GeminiSummary({ restaurantId }) {
     
     Here are the reviews: ${reviews.map(review => review.text).join(reviewSeparator)}
   `;
+  
+  // const prompt = "Write a story about a magic backpack.";
 
   try {
     const result = await model.generateContent(prompt);
@@ -43,7 +64,12 @@ export async function GeminiSummary({ restaurantId }) {
         </p>
       );
     } else {
-      return <p>Error contacting Gemini</p>;
+      return (
+        <div className="restaurant__review_summary">
+          <p>Error contacting Gemini</p>
+          <p>{e.message}</p>
+        </div>
+      );
     }
   }
 }
